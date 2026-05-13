@@ -54,7 +54,7 @@ int enlist_vm_freerg_list(struct mm_struct *mm, struct vm_rg_struct *rg_elmt)
  */
 struct vm_rg_struct *get_symrg_byid(struct mm_struct *mm, int rgid)
 {
-  if (rgid < 0 || rgid > PAGING_MAX_SYMTBL_SZ)
+  if (rgid < 0 || rgid >= PAGING_MAX_SYMTBL_SZ)
     return NULL;
 
   return &mm->symrgtbl[rgid];
@@ -72,7 +72,7 @@ int __alloc(struct pcb_t *caller, int vmaid, int rgid, addr_t size, addr_t *allo
 {
   if (caller == NULL || caller->krnl == NULL || caller->krnl->mm == NULL ||
       alloc_addr == NULL || size == 0 ||
-      rgid < 0 || rgid > PAGING_MAX_SYMTBL_SZ)
+      rgid < 0 || rgid >= PAGING_MAX_SYMTBL_SZ)
   {
     return -1;
   }
@@ -109,23 +109,9 @@ int __alloc(struct pcb_t *caller, int vmaid, int rgid, addr_t size, addr_t *allo
     return -1;
   }
 
-#ifdef MM64
-  addr_t inc_sz = PAGING64_PAGE_ALIGNSZ(size);
-#else
-  addr_t inc_sz = PAGING_PAGE_ALIGNSZ(size);
-#endif
-
   caller->krnl->mm->symrgtbl[rgid].rg_start = old_sbrk;
   caller->krnl->mm->symrgtbl[rgid].rg_end = old_sbrk + size;
   caller->krnl->mm->symrgtbl[rgid].rg_next = NULL;
-
-  /* Keep the unused aligned tail as a reusable free region. */
-  if (inc_sz > size)
-  {
-    struct vm_rg_struct *remain = init_vm_rg(old_sbrk + size, old_sbrk + inc_sz);
-    if (remain != NULL)
-      enlist_vm_freerg_list(caller->krnl->mm, remain);
-  }
 
   *alloc_addr = old_sbrk;
 
@@ -144,7 +130,7 @@ int __free(struct pcb_t *caller, int vmaid, int rgid)
 {
   pthread_mutex_lock(&mmvm_lock);
 
-  if (rgid < 0 || rgid > PAGING_MAX_SYMTBL_SZ)
+  if (rgid < 0 || rgid >= PAGING_MAX_SYMTBL_SZ)
   {
     pthread_mutex_unlock(&mmvm_lock);
     return -1;
