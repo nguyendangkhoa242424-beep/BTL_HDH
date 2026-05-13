@@ -12,7 +12,9 @@
 #define OSMM_H
 
 #include <stdint.h>
-
+#ifdef MM64
+typedef struct pgd_t pgd_t;
+#endif
 #define MM_PAGING
 #define PAGING_MAX_MMSWP 4 /* max number of supported swapped space */
 #define PAGING_MAX_SYMTBL_SZ 30
@@ -109,11 +111,7 @@ struct kcache_pool_struct
 struct mm_struct
 {
 #ifdef MM64
-   addr_t *pgd;
-   addr_t *p4d;
-   addr_t *pud;
-   addr_t *pmd;
-   addr_t *pt;
+   pgd_t *pgd;
 #else
    uint32_t *pgd;
 #endif
