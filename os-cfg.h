@@ -1,0 +1,1 @@
+#define MM_FIXED_MEMSZ
