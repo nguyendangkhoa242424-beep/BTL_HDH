@@ -56,6 +56,21 @@ struct pcb_t *dequeue(struct queue_t *q)
         return proc;
 }
 
+struct pcb_t *dequeue_fifo(struct queue_t *q)
+{
+        if (empty(q))
+                return NULL;
+
+        struct pcb_t *proc = q->proc[0];
+        int i;
+
+        for (i = 0; i < q->size - 1; i++)
+                q->proc[i] = q->proc[i + 1];
+
+        q->size--;
+        return proc;
+}
+
 struct pcb_t *purgequeue(struct queue_t *q, struct pcb_t *proc)
 {
         /* TODO: remove a specific item from queue

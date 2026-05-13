@@ -16,6 +16,8 @@ void enqueue(struct queue_t *q, struct pcb_t *proc);
 
 struct pcb_t *dequeue(struct queue_t *q);
 
+struct pcb_t *dequeue_fifo(struct queue_t *q);
+
 struct pcb_t *purgequeue(struct queue_t *q, struct pcb_t *proc);
 
 int empty(struct queue_t *q);

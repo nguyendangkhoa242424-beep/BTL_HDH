@@ -1,5 +1,5 @@
-#ifndef QUEUE_H
-#define QUEUE_H
+#ifndef SCHED_H
+#define SCHED_H
 
 #include "common.h"
 
@@ -25,5 +25,4 @@ void put_proc(struct pcb_t * proc);
 void add_proc(struct pcb_t * proc);
 
 #endif
-
 

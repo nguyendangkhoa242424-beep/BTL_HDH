@@ -73,9 +73,11 @@ struct pcb_t * get_mlq_proc(void) {
  
 	/* Persistent state across calls */
 	static int curr_prio = 0;
-	static int curr_slot = MAX_PRIO; /* slot[0] = MAX_PRIO - 0 */
+	static int curr_slot = MAX_PRIO;
  
 	pthread_mutex_lock(&queue_lock);
+	//curr_prio = 0;
+	//curr_slot = 1;
  
 	int checked = 0;
 	while (checked < MAX_PRIO) {

@@ -446,7 +446,7 @@ int __swap_cp_page(struct memphy_struct *mpsrc, addr_t srcfpn,
  */
 int init_mm(struct mm_struct *mm, struct pcb_t *caller)
 {
-  
+  (void)caller;
   struct vm_area_struct *vma0 = malloc(sizeof(struct vm_area_struct));
   if (vma0 == NULL)
     return -1;
@@ -459,16 +459,32 @@ int init_mm(struct mm_struct *mm, struct pcb_t *caller)
 
     int i;
     mm->pgd = malloc(sizeof(addr_t) * PAGING_MAX_PGN);
+    mm->p4d = malloc(sizeof(addr_t) * PAGING_MAX_PGN);
+    mm->pud = malloc(sizeof(addr_t) * PAGING_MAX_PGN);
+    mm->pmd = malloc(sizeof(addr_t) * PAGING_MAX_PGN);
+    mm->pt = malloc(sizeof(addr_t) * PAGING_MAX_PGN);
 
-    if (mm->pgd == NULL) {
+    if (mm->pgd == NULL || mm->p4d == NULL || mm->pud == NULL ||
+        mm->pmd == NULL || mm->pt == NULL) {
+        free(mm->pgd);
+        free(mm->p4d);
+        free(mm->pud);
+        free(mm->pmd);
+        free(mm->pt);
+        free(vma0);
         return -1;
     }
 
     for (i = 0; i < PAGING_MAX_PGN; i++) {
         mm->pgd[i] = 0;
+        mm->p4d[i] = 0;
+        mm->pud[i] = 0;
+        mm->pmd[i] = 0;
+        mm->pt[i] = 0;
     }
 
     mm->fifo_pgn = NULL;
+    mm->kcpooltbl = NULL;
   /* By default the owner comes with at least one vma */
   vma0->vm_id = 0;
   vma0->vm_start = 0;
@@ -477,6 +493,11 @@ int init_mm(struct mm_struct *mm, struct pcb_t *caller)
 
   struct vm_rg_struct *first_rg = init_vm_rg(vma0->vm_start, vma0->vm_end);
   if (first_rg == NULL) {
+    free(mm->pgd);
+    free(mm->p4d);
+    free(mm->pud);
+    free(mm->pmd);
+    free(mm->pt);
     free(vma0);
     return -1;
 }
@@ -613,72 +634,18 @@ int print_list_pgn(struct pgn_t *ip)
 
 int print_pgtbl(struct pcb_t *caller, addr_t start, addr_t end)
 {
-    struct krnl_t *krnl = caller->krnl;
+    (void)start;
+    (void)end;
 
-    addr_t pgn_start;
-    addr_t pgn_end;
-    addr_t pgn;
+    if (caller == NULL || caller->krnl == NULL || caller->krnl->mm == NULL)
+        return -1;
 
-    pgn_start = PAGING_PGN(start);
-    pgn_end   = PAGING_PGN(end);
-
-    if (pgn_end >= PAGING_MAX_PGN)
-        pgn_end = PAGING_MAX_PGN - 1;
-
-    printf("===== PAGE TABLE =====\n");
-
-    for (pgn = pgn_start; pgn <= pgn_end; pgn++)
-    {
-        uint32_t pte = krnl->mm->pgd[pgn];
-
-        printf("PGN %-5u : PTE = 0x%08x ",
-               (uint32_t)pgn,
-               pte);
-
-        if ((pte & PAGING_PTE_PRESENT_MASK))
-        {
-            addr_t fpn;
-
-            fpn = GETVAL(
-                pte,
-                PAGING_PTE_FPN_MASK,
-                PAGING_PTE_FPN_LOBIT
-            );
-
-            printf("[PRESENT] FPN=%u",
-                   (uint32_t)fpn);
-        }
-        else if ((pte & PAGING_PTE_SWAPPED_MASK))
-        {
-            addr_t swptype;
-            addr_t swpoff;
-
-            swptype = GETVAL(
-                pte,
-                PAGING_PTE_SWPTYP_MASK,
-                PAGING_PTE_SWPTYP_LOBIT
-            );
-
-            swpoff = GETVAL(
-                pte,
-                PAGING_PTE_SWPOFF_MASK,
-                PAGING_PTE_SWPOFF_LOBIT
-            );
-
-            printf("[SWAPPED] TYPE=%u OFF=%u",
-                   (uint32_t)swptype,
-                   (uint32_t)swpoff);
-        }
-        else
-        {
-            printf("[EMPTY]");
-        }
-
-        printf("\n");
-    }
-
-    printf("======================\n");
-
+    printf("print_pgtbl:\n");
+    printf(" PDG=%16p P4g=%16p PUD=%16p PMD=%16p\n",
+           (void *)caller->krnl->mm->pgd,
+           (void *)caller->krnl->mm->p4d,
+           (void *)caller->krnl->mm->pud,
+           (void *)caller->krnl->mm->pmd);
     return 0;
 }
 

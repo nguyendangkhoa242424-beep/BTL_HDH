@@ -11,9 +11,9 @@ Time slot   3
 	Loaded a process at input/proc/s2, PID: 3 PRIO: 0
 Time slot   4
 Time slot   5
-	Loaded a process at input/proc/s1, PID: 4 PRIO: 0
 	CPU 0: Put process  1 to run queue (pc=4/15)
 	CPU 0: Dispatched process  1
+	Loaded a process at input/proc/s1, PID: 4 PRIO: 0
 Time slot   6
 	Loaded a process at input/proc/s3, PID: 5 PRIO: 0
 Time slot   7
